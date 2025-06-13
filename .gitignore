@@ -1,5 +1,5 @@
 .ipynb_checkpoints
 .vscode/
 __pycache__/
-scripts/baybayin_model.keras
+scripts/baybayin_model_v2.keras
 venv

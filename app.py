@@ -11,40 +11,11 @@ from tensorflow import keras
 from bidict import bidict
 
 ENCODER = bidict({
-    'a': 1,
-    'b': 2,
-    'ba': 3, 'be_bi': 4, 'bo_bu': 5,
-    'd': 6,
-    'da_ra': 7, 'de_di': 8, 'do_du': 9,
-    'e_i': 10,
-    'g': 11,
-    'ga': 12, 'ge_gi': 13, 'go_gu': 14,
-    'h': 15,
-    'ha': 16, 'he_hi': 17, 'ho_hu': 18,
-    'k': 19,
-    'ka': 20, 'ke_ki': 21, 'ko_ku': 22,
-    'l': 23,
-    'la': 24, 'le_li': 25, 'lo_lu': 26,
-    'm': 27,
-    'ma': 28, 'me_mi': 29, 'mo_mu': 30,
-    'n': 31,
-    'na': 32, 'ne_ni': 33,
-    'ng': 34,
-    'nga': 35, 'nge_ngi': 36, 'ngo_ngu': 37, 'no_nu': 38,
-    'o_u': 39,
-    'p': 40,
-    'pa': 41, 'pe_pi': 42, 'po_pu': 43,
-    'r': 44,
-    'ra': 45, 're_ri': 46, 'ro_ru': 47,
-    's': 48,
-    'sa': 49, 'se_si': 50, 'so_su': 51,
-    't': 52,
-    'ta': 53, 'te_ti': 54, 'to_tu': 55,
-    'w': 56,
-    'wa': 57, 'we_wi': 58, 'wo_wu': 59,
-    'y': 60,
-    'ya': 61, 'ye_yi': 62, 'yo_yu': 63
+    'a': 0, 
+    'e_i' : 1,
+    'o_u': 2
 })
+
 from bidict import bidict
 
 CHAR_MAP = bidict({
@@ -164,22 +135,30 @@ def practice_get():
 def practice_post():
     try:
         question = request.form['question']
-
         pixels_str = request.form['pixels']
-        pixels = pixels_str.split(',')
-        img = np.array(pixels).astype(float).reshape(1, 50, 50, 1)
+        pixels = np.array(pixels_str.split(',')).astype(float) / 255.0  # ✅ only divide here
 
-        model = keras.models.load_model('scripts/baybayin_model.keras')
+        img = pixels.reshape(1, 50, 50, 1)
+
+        print("IMAGE SHAPE:", img.shape)
+        print("PIXEL RANGE:", img.min(), img.max())  # ✅ Should be between 0.0 and 1.0
+        print("First few pixels:", pixels[:10])
+
+        model = keras.models.load_model('scripts/baybayin_model_v2.keras')
 
         pred = np.argmax(model.predict(img), axis=-1)
         pred = ENCODER.inverse[pred[0]]
+
+        print("PREDICTED:", pred, "| EXPECTED:", question)
+        print("PIXEL RANGE:", pixels.min(), pixels.max())
+        print("PIXEL SUM:", np.sum(pixels))
 
         correct = 'yes' if pred == question else 'no'
 
         return render_template('practice.html', q=choice(list(ENCODER.keys())), correct=correct)
 
     except Exception as e:
-        print(e)
+        print("ERROR:", e)
         return render_template('error.html')
 
 
@@ -217,7 +196,7 @@ def quiz_post():
         pixels = pixels_str.split(',')
         img = np.array(pixels).astype(float).reshape(1, 50, 50, 1)
 
-        model = keras.models.load_model('scripts/baybayin_model.keras')
+        model = keras.models.load_model('scripts/baybayin_model_v2.keras')
 
         # make a prediction
         pred = np.argmax(model.predict(img), axis=-1)
@@ -241,6 +220,39 @@ def quiz_post():
     except Exception as e:
         print(e)
         return render_template('error.html')
+    
+
+@app.route('/debug_test')
+def debug_test():
+    import numpy as np
+    from tensorflow import keras
+
+    try:
+        model = keras.models.load_model('scripts/baybayin_model_v2.keras')
+
+        # Load one actual image from your test set, for example
+        imgs = np.load("data/imgs.npy").astype("float32") / 255.0
+        labels = np.load("data/labels.npy") - 1  # Assuming you shifted earlier
+
+        # Use one known sample
+        index = 100  # Any index you know is correct
+        img = imgs[index].reshape(1, 50, 50, 1)
+        label = labels[index]
+        pred = np.argmax(model.predict(img), axis=-1)[0]
+
+        # Reverse map using encoder
+        true_label = ENCODER.inverse[label + 1]
+        pred_label = ENCODER.inverse[pred + 1]
+
+        print("DEBUG TEST")
+        print("Image shape:", img.shape)
+        print("Predicted:", pred_label)
+        print("Actual:", true_label)
+
+        return f"<p>Predicted: <b>{pred_label}</b><br>Actual: <b>{true_label}</b></p>"
+
+    except Exception as e:
+        return f"<p>Error: {e}</p>"
 
 
 if __name__ == '__main__':

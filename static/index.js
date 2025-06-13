@@ -8,9 +8,15 @@ let clickX = []
 let clickY = []
 let clickDrag = []
 
+
+
 function startCanvas() {
-  canvas = document.getElementById('canvas')
+  let canvas = document.getElementById('canvas')
   context = canvas.getContext("2d")
+
+  context.strokeStyle = "#000"
+  context.lineJoin = "round"
+  context.lineWidth = 10
 
   canvas.addEventListener("touchstart", function (e) {
     let touch = e.touches[0]
@@ -37,7 +43,7 @@ function startCanvas() {
 
   $('#canvas').mousedown(function (e) {
     paint = true
-    addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTope, false)
+    addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, false)
     redraw()
   })
 
@@ -76,18 +82,21 @@ function resetCanvas() {
 }
 
 function redraw() {
-  clearCanvas()
+  clearCanvas();
+  context.lineJoin = "round";
+  context.lineWidth = 10;  // <- MAKE THIS BIGGER
+  context.strokeStyle = "#000";  // ensure it's black
 
   for (let i = 0; i < clickX.length; i++) {
-      context.beginPath()
+    context.beginPath();
     if (clickDrag[i] && i) {
-      context.moveTo(clickX[i - 1], clickY[i - 1])
+      context.moveTo(clickX[i - 1], clickY[i - 1]);
     } else {
-      context.moveTo(clickX[i] - 1, clickY[i])
+      context.moveTo(clickX[i] - 1, clickY[i]);
     }
-    context.lineTo(clickX[i], clickY[i])
-    context.closePath()
-    context.stroke()
+    context.lineTo(clickX[i], clickY[i]);
+    context.closePath();
+    context.stroke();
   }
 }
 
@@ -110,22 +119,26 @@ function sendPracticeData() {
 }
 
 function getPixels() {
-  let rawPixels = context.getImageData(0, 0, 200, 200).data
-  let _pixels = []
+  let tempCanvas = document.createElement('canvas')
+  tempCanvas.width = 50
+  tempCanvas.height = 50
+  let tempCtx = tempCanvas.getContext('2d')
+
+  // Draw scaled-down image
+  tempCtx.drawImage(canvas, 0, 0, 50, 50)
+
+  let rawPixels = tempCtx.getImageData(0, 0, 50, 50).data
   let pixels = []
 
-  // rawPixels is [0, 0, 0, 0, ...], where a group of four
-  // digits represent one pixel. so we're just grab every
-  // fourth digit
-  for (i = 0; i < rawPixels.length; i += 4) {
-    _pixels.push(rawPixels[i + 3])
-  }
-    
-  // compress image from 200x200 to 50x50
-  for (i = 0; i < _pixels.length; i += 800) {
-      for (j = 0; j < 200; j += 4) {
-      pixels.push(_pixels[i+j])
-    }
+  for (let i = 0; i < rawPixels.length; i += 4) {
+    const r = rawPixels[i]
+    const g = rawPixels[i + 1]
+    const b = rawPixels[i + 2]
+
+    // Convert RGB to grayscale using luminosity method
+    const grayscale = 0.299 * r + 0.587 * g + 0.114 * b
+
+    pixels.push(grayscale)
   }
 
   return pixels
