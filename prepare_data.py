@@ -5,13 +5,13 @@ from bidict import bidict
 import csv
 
 ENCODER = bidict({
-    'sa': 1,
-    'da_ra': 2, 
-    'ta': 3
+    'a': 1,
+    'o_u': 2, 
+    'e_i': 3
 })
 
-IMAGE_DIR = './raw_cc3_1'
-OUTPUT_DIR = './data_cc3_1'
+IMAGE_DIR = './raw_v'
+OUTPUT_DIR = './data_v_1'
 IMG_SIZE = (50, 50)
 
 if not os.path.exists(OUTPUT_DIR):
