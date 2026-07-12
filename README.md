@@ -1,6 +1,6 @@
 # baybayin character recognition app
 
-an interactive desktop app built with python and tkinter that recognizes handwritten baybayin script characters using [convolutional neural network (cnn) models](https://github.com/emptiv/baybayin-ml-legacy). you can draw characters directly on a digital canvas and get real-time model predictions based on specific lessons.
+an interactive desktop app built with python and tkinter that recognizes handwritten baybayin script characters using [convolutional neural network (cnn) models](https://github.com/emptiv/baybayin-ml-archive). you can draw characters directly on a digital canvas and get real-time model predictions based on specific lessons.
 
 ---
 
